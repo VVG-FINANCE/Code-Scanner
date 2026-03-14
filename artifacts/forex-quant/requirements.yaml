@@ -1,0 +1,11 @@
+packages:
+  "recharts": "Data visualization for price history and distribution charts"
+  "framer-motion": "Animations for gauges, progress bars, and complex UI transitions"
+  "date-fns": "Formatting timestamps for financial data"
+  "clsx": "Utility for Tailwind class merging"
+  "tailwind-merge": "Utility for Tailwind class merging"
+
+notes:
+  - App uses dark mode terminal/trading aesthetic
+  - Implements 10-second polling for all quantitative data
+  - Assumes @workspace/api-client-react exports all generated hooks and types

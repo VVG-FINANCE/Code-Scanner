@@ -1,15 +1,20 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: EUR/USD Quantitative Analysis API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: market
+    description: Market data and price operations
+  - name: analysis
+    description: Quantitative analysis operations
+  - name: signals
+    description: Trading signal and opportunity operations
 paths:
   /healthz:
     get:
@@ -24,6 +29,177 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /market/price:
+    get:
+      operationId: getMarketPrice
+      tags: [market]
+      summary: Get current EUR/USD price
+      description: Returns the latest EUR/USD price with pip adjustment and metadata
+      responses:
+        "200":
+          description: Current market price data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketPrice"
+
+  /market/history:
+    get:
+      operationId: getMarketHistory
+      tags: [market]
+      summary: Get price history
+      description: Returns recent price history for charting
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 100
+      responses:
+        "200":
+          description: Price history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PriceHistoryResponse"
+
+  /market/pip-adjustment:
+    post:
+      operationId: updatePipAdjustment
+      tags: [market]
+      summary: Update pip adjustment
+      description: Set pip adjustment to compensate for API lag
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PipAdjustmentRequest"
+      responses:
+        "200":
+          description: Updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PipAdjustmentResponse"
+
+  /analysis/technical:
+    get:
+      operationId: getTechnicalAnalysis
+      tags: [analysis]
+      summary: Get technical analysis
+      description: Returns RSI, EMA, Bollinger Bands, momentum and volatility indicators
+      responses:
+        "200":
+          description: Technical analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TechnicalAnalysis"
+
+  /analysis/econophysics:
+    get:
+      operationId: getEconophysicsAnalysis
+      tags: [analysis]
+      summary: Get econophysics metrics
+      description: Returns Hurst exponent, market entropy, volatility clustering, liquidity shocks, price acceleration
+      responses:
+        "200":
+          description: Econophysics metrics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EconophysicsAnalysis"
+
+  /analysis/market-state:
+    get:
+      operationId: getMarketState
+      tags: [analysis]
+      summary: Get market regime state
+      description: Returns current market regime - trending, ranging, volatile
+      responses:
+        "200":
+          description: Market state
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MarketState"
+
+  /analysis/monte-carlo:
+    get:
+      operationId: getMonteCarloSimulation
+      tags: [analysis]
+      summary: Run Monte Carlo simulation
+      description: Simulates future price scenarios and returns probability distributions
+      responses:
+        "200":
+          description: Monte Carlo results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MonteCarloResult"
+
+  /signals:
+    get:
+      operationId: getSignals
+      tags: [signals]
+      summary: Get active trading signals
+      description: Returns active trading opportunities with scores
+      responses:
+        "200":
+          description: Active signals
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SignalsResponse"
+
+  /signals/history:
+    get:
+      operationId: getSignalHistory
+      tags: [signals]
+      summary: Get signal history
+      description: Returns past signals and their outcomes
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Signal history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SignalHistoryResponse"
+
+  /signals/{id}/resolve:
+    post:
+      operationId: resolveSignal
+      tags: [signals]
+      summary: Resolve a signal
+      description: Mark a signal as hit TP, hit SL, or expired
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ResolveSignalRequest"
+      responses:
+        "200":
+          description: Signal resolved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ResolveSignalResponse"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +210,385 @@ components:
       required:
         - status
 
+    MarketPrice:
+      type: object
+      properties:
+        price:
+          type: number
+        adjustedPrice:
+          type: number
+        pipChange:
+          type: number
+        pipChangePercent:
+          type: number
+        previousPrice:
+          type: number
+        timestamp:
+          type: string
+        source:
+          type: string
+        pollInterval:
+          type: integer
+      required:
+        - price
+        - adjustedPrice
+        - pipChange
+        - pipChangePercent
+        - previousPrice
+        - timestamp
+        - source
+        - pollInterval
+
+    PricePoint:
+      type: object
+      properties:
+        price:
+          type: number
+        timestamp:
+          type: string
+        open:
+          type: number
+        high:
+          type: number
+        low:
+          type: number
+        close:
+          type: number
+      required:
+        - price
+        - timestamp
+        - open
+        - high
+        - low
+        - close
+
+    PriceHistoryResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/PricePoint"
+        count:
+          type: integer
+      required:
+        - data
+        - count
+
+    PipAdjustmentRequest:
+      type: object
+      properties:
+        pips:
+          type: number
+      required:
+        - pips
+
+    PipAdjustmentResponse:
+      type: object
+      properties:
+        pipAdjustment:
+          type: number
+        message:
+          type: string
+      required:
+        - pipAdjustment
+        - message
+
+    BollingerBands:
+      type: object
+      properties:
+        upper:
+          type: number
+        middle:
+          type: number
+        lower:
+          type: number
+        bandwidth:
+          type: number
+        percentB:
+          type: number
+      required:
+        - upper
+        - middle
+        - lower
+        - bandwidth
+        - percentB
+
+    TechnicalAnalysis:
+      type: object
+      properties:
+        rsi:
+          type: number
+        rsiSignal:
+          type: string
+        ema20:
+          type: number
+        ema50:
+          type: number
+        ema200:
+          type: number
+        emaSignal:
+          type: string
+        bollingerBands:
+          $ref: "#/components/schemas/BollingerBands"
+        momentum:
+          type: number
+        volatility:
+          type: number
+        priceActionPatterns:
+          type: array
+          items:
+            type: string
+        timestamp:
+          type: string
+      required:
+        - rsi
+        - rsiSignal
+        - ema20
+        - ema50
+        - ema200
+        - emaSignal
+        - bollingerBands
+        - momentum
+        - volatility
+        - priceActionPatterns
+        - timestamp
+
+    EconophysicsAnalysis:
+      type: object
+      properties:
+        hurstExponent:
+          type: number
+        hurstInterpretation:
+          type: string
+        marketEntropy:
+          type: number
+        volatilityClustering:
+          type: number
+        liquidityShock:
+          type: number
+        priceAcceleration:
+          type: number
+        fatTailIndex:
+          type: number
+        zScore:
+          type: number
+        timestamp:
+          type: string
+      required:
+        - hurstExponent
+        - hurstInterpretation
+        - marketEntropy
+        - volatilityClustering
+        - liquidityShock
+        - priceAcceleration
+        - fatTailIndex
+        - zScore
+        - timestamp
+
+    MarketState:
+      type: object
+      properties:
+        regime:
+          type: string
+          enum: [trending_up, trending_down, ranging, volatile, breakout]
+        strength:
+          type: number
+        supportLevels:
+          type: array
+          items:
+            type: number
+        resistanceLevels:
+          type: array
+          items:
+            type: number
+        liquidityZones:
+          type: array
+          items:
+            type: number
+        timestamp:
+          type: string
+      required:
+        - regime
+        - strength
+        - supportLevels
+        - resistanceLevels
+        - liquidityZones
+        - timestamp
+
+    MonteCarloResult:
+      type: object
+      properties:
+        simulations:
+          type: integer
+        probabilityUp:
+          type: number
+        probabilityDown:
+          type: number
+        expectedPrice1h:
+          type: number
+        expectedPrice4h:
+          type: number
+        priceDistribution:
+          type: array
+          items:
+            type: number
+        confidenceInterval68:
+          type: object
+          properties:
+            low:
+              type: number
+            high:
+              type: number
+          required:
+            - low
+            - high
+        confidenceInterval95:
+          type: object
+          properties:
+            low:
+              type: number
+            high:
+              type: number
+          required:
+            - low
+            - high
+        timestamp:
+          type: string
+      required:
+        - simulations
+        - probabilityUp
+        - probabilityDown
+        - expectedPrice1h
+        - expectedPrice4h
+        - priceDistribution
+        - confidenceInterval68
+        - confidenceInterval95
+        - timestamp
+
+    TradingSignal:
+      type: object
+      properties:
+        id:
+          type: integer
+        direction:
+          type: string
+          enum: [long, short]
+        entry1:
+          type: number
+        entry2:
+          type: number
+          nullable: true
+        stopLoss1:
+          type: number
+        stopLoss2:
+          type: number
+          nullable: true
+        takeProfit1:
+          type: number
+        takeProfit2:
+          type: number
+          nullable: true
+        score:
+          type: number
+        scoreBreakdown:
+          $ref: "#/components/schemas/ScoreBreakdown"
+        rationale:
+          type: string
+        status:
+          type: string
+          enum: [active, tp1_hit, tp2_hit, sl1_hit, sl2_hit, expired]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required:
+        - id
+        - direction
+        - entry1
+        - stopLoss1
+        - takeProfit1
+        - score
+        - scoreBreakdown
+        - rationale
+        - status
+        - createdAt
+        - updatedAt
+
+    ScoreBreakdown:
+      type: object
+      properties:
+        priceAction:
+          type: number
+        marketStructure:
+          type: number
+        technicalIndicators:
+          type: number
+        monteCarlo:
+          type: number
+        bayesian:
+          type: number
+        machineLearning:
+          type: number
+        econophysics:
+          type: number
+        marketRegime:
+          type: number
+      required:
+        - priceAction
+        - marketStructure
+        - technicalIndicators
+        - monteCarlo
+        - bayesian
+        - machineLearning
+        - econophysics
+        - marketRegime
+
+    SignalsResponse:
+      type: object
+      properties:
+        signals:
+          type: array
+          items:
+            $ref: "#/components/schemas/TradingSignal"
+        currentPrice:
+          type: number
+        generatedAt:
+          type: string
+      required:
+        - signals
+        - currentPrice
+        - generatedAt
+
+    SignalHistoryResponse:
+      type: object
+      properties:
+        signals:
+          type: array
+          items:
+            $ref: "#/components/schemas/TradingSignal"
+        total:
+          type: integer
+      required:
+        - signals
+        - total
+
+    ResolveSignalRequest:
+      type: object
+      properties:
+        outcome:
+          type: string
+          enum: [tp1_hit, tp2_hit, sl1_hit, sl2_hit, expired]
+      required:
+        - outcome
+
+    ResolveSignalResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        signal:
+          $ref: "#/components/schemas/TradingSignal"
+      required:
+        - success
+        - signal

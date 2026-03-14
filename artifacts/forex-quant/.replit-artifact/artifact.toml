@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "EUR/USD Quantitative Analyzer"
+version = "1.0.0"
+id = "artifacts/forex-quant"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+localPort = 25595
+name = "web"
+paths = ["/"]
+
+[services.development]
+run = "pnpm --filter @workspace/forex-quant run dev"
+
+[services.env]
+PORT = "25595"
+BASE_PATH = "/"
+
+[services.production]
+build = ["pnpm", "--filter", "@workspace/forex-quant", "run", "build"]
+publicDir = "artifacts/forex-quant/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
