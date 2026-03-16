@@ -1,5 +1,13 @@
 import app from "./app";
 
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught exception (server stays alive):", err);
+});
+
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled rejection (server stays alive):", reason);
+});
+
 const rawPort = process.env["PORT"];
 
 if (!rawPort) {

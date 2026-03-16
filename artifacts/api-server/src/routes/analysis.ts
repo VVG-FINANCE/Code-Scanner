@@ -18,44 +18,71 @@ function getPrices(): number[] {
   return buf.map(b => b.price);
 }
 
+function sanitize(obj: Record<string, unknown>): Record<string, unknown> {
+  return JSON.parse(JSON.stringify(obj, (_k, v) => {
+    if (typeof v === "number" && (isNaN(v) || !isFinite(v))) return 0;
+    return v;
+  })) as Record<string, unknown>;
+}
+
 router.get("/technical", (_req, res) => {
-  const prices = getPrices();
-  const result = computeTechnical(prices);
-  const parsed = GetTechnicalAnalysisResponse.parse({
-    ...result,
-    timestamp: new Date().toISOString(),
-  });
-  res.json(parsed);
+  try {
+    const prices = getPrices();
+    const result = computeTechnical(prices);
+    const parsed = GetTechnicalAnalysisResponse.parse(sanitize({
+      ...result,
+      timestamp: new Date().toISOString(),
+    }));
+    res.json(parsed);
+  } catch (err) {
+    console.error("technical error:", err);
+    res.status(500).json({ error: "Analysis unavailable" });
+  }
 });
 
 router.get("/econophysics", (_req, res) => {
-  const prices = getPrices();
-  const result = computeEconophysics(prices);
-  const parsed = GetEconophysicsAnalysisResponse.parse({
-    ...result,
-    timestamp: new Date().toISOString(),
-  });
-  res.json(parsed);
+  try {
+    const prices = getPrices();
+    const result = computeEconophysics(prices);
+    const parsed = GetEconophysicsAnalysisResponse.parse(sanitize({
+      ...result,
+      timestamp: new Date().toISOString(),
+    }));
+    res.json(parsed);
+  } catch (err) {
+    console.error("econophysics error:", err);
+    res.status(500).json({ error: "Analysis unavailable" });
+  }
 });
 
 router.get("/market-state", (_req, res) => {
-  const prices = getPrices();
-  const result = computeMarketState(prices);
-  const parsed = GetMarketStateResponse.parse({
-    ...result,
-    timestamp: new Date().toISOString(),
-  });
-  res.json(parsed);
+  try {
+    const prices = getPrices();
+    const result = computeMarketState(prices);
+    const parsed = GetMarketStateResponse.parse(sanitize({
+      ...result,
+      timestamp: new Date().toISOString(),
+    }));
+    res.json(parsed);
+  } catch (err) {
+    console.error("market-state error:", err);
+    res.status(500).json({ error: "Analysis unavailable" });
+  }
 });
 
 router.get("/monte-carlo", (_req, res) => {
-  const prices = getPrices();
-  const result = runMonteCarlo(prices, 1000);
-  const parsed = GetMonteCarloSimulationResponse.parse({
-    ...result,
-    timestamp: new Date().toISOString(),
-  });
-  res.json(parsed);
+  try {
+    const prices = getPrices();
+    const result = runMonteCarlo(prices, 1000);
+    const parsed = GetMonteCarloSimulationResponse.parse(sanitize({
+      ...result,
+      timestamp: new Date().toISOString(),
+    }));
+    res.json(parsed);
+  } catch (err) {
+    console.error("monte-carlo error:", err);
+    res.status(500).json({ error: "Analysis unavailable" });
+  }
 });
 
 export default router;

@@ -69,17 +69,25 @@ export function computeMarketState(prices: number[]): MarketStateResult {
   const firstHalf = recent.slice(0, 25);
   const secondHalf = recent.slice(25);
 
-  const firstAvg = firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length;
-  const secondAvg = secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length;
-  const trendStrength = Math.abs(secondAvg - firstAvg) / firstAvg * 10000;
+  const firstAvg = firstHalf.length > 0
+    ? firstHalf.reduce((a, b) => a + b, 0) / firstHalf.length
+    : (prices[prices.length - 1] ?? 1.085);
+  const secondAvg = secondHalf.length > 0
+    ? secondHalf.reduce((a, b) => a + b, 0) / secondHalf.length
+    : firstAvg;
+  const trendStrength = firstAvg !== 0
+    ? Math.abs(secondAvg - firstAvg) / firstAvg * 10000
+    : 0;
 
-  const high = Math.max(...recent);
-  const low = Math.min(...recent);
+  const high = recent.length > 0 ? Math.max(...recent) : firstAvg + 0.005;
+  const low = recent.length > 0 ? Math.min(...recent) : firstAvg - 0.005;
   const range = high - low;
-  const avgPrice = recent.reduce((a, b) => a + b, 0) / recent.length;
+  const avgPrice = recent.length > 0
+    ? recent.reduce((a, b) => a + b, 0) / recent.length
+    : firstAvg;
 
   const diffs = recent.map((p, i) => i > 0 ? Math.abs(p - recent[i - 1]!) : 0).slice(1);
-  const avgMove = diffs.reduce((a, b) => a + b, 0) / diffs.length;
+  const avgMove = diffs.length > 0 ? diffs.reduce((a, b) => a + b, 0) / diffs.length : 0.0001;
   const lastMove = diffs[diffs.length - 1] ?? 0;
 
   let regime: MarketRegime;

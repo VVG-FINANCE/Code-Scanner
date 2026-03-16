@@ -19,7 +19,7 @@ const state = {
   priceBuffer: [] as { price: number; timestamp: number }[],
 };
 
-const POLL_INTERVALS = [5000, 10000, 15000, 20000, 30000, 60000];
+const POLL_INTERVALS = [5000, 10000, 20000, 30000, 60000];
 
 async function fetchFromFrankfurter(): Promise<number | null> {
   try {
